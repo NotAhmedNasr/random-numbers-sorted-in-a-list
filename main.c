@@ -3,10 +3,14 @@
 #include <stdlib.h>
 #include <time.h>
 
+#define ELEMENTS 200
+#define RANGE 50
+
 struct linkedList    //linked list struct (node)
 {
     int number;
     struct linkedList *next;
+    struct linkedList *prev;
 };
 
 typedef struct linkedList linkedList;  // using linkedList as the name
@@ -17,6 +21,7 @@ linkedList *makeList(int data)
     linkedList *list = malloc(sizeof(linkedList));
     list->number = data;
     list->next = NULL;
+    list->prev = NULL;
 
     return list;
 }
@@ -24,9 +29,9 @@ linkedList *makeList(int data)
 // creats an adds a node to the beginning of the list
 linkedList *addToList(linkedList *list, int data)
 {
-    linkedList *newList = malloc(sizeof(linkedList));
-    newList->number = data;
+    linkedList *newList = makeList(data);
     newList->next = list;
+    list->prev = newList;
 
     return newList;
 }
@@ -91,26 +96,77 @@ void printList(linkedList *list)
     }
 }
 
+// this removes a node from the list
+void deleteNode(linkedList *node)
+{
+    if (node->next == NULL)  // checks if it is the last node
+    {
+        node->prev->next = node->next;
+    }
+    else if (node->prev == NULL)   // checks if it is the first node
+    {
+        node->next->prev = node->prev;
+    }
+    else
+    {
+        node->prev->next = node->next;
+        node->next->prev = node->prev;
+    }
+
+    free(node);
+}
+
+
+// clears dubs from sorted list
+void clearDubs(linkedList *list)
+{
+    linkedList *traverser, *deleted;
+    int number;
+
+    if (list == NULL)
+    {
+        return;
+    }
+
+    traverser = list->next;
+
+    while(traverser != NULL && traverser->prev != NULL)
+    {
+        if (traverser->number == traverser->prev->number)
+        {
+            deleted = traverser;
+            traverser = traverser->next;
+            deleteNode(deleted);
+        }
+        else
+        {
+            traverser = traverser->next;
+        }
+    }
+}
+
 int main()
 {
-    int randomNumbers[100] = {0};  // holds random numbers
+    int randomNumbers[ELEMENTS] = {0};  // holds random numbers
     int i;
 
     srand(time(NULL));   // seed for the random number generator ---> the function rand()
 
-    for (i = 0; i < 100; i++)
+    for (i = 0; i < ELEMENTS; i++)
     {
-        randomNumbers[i] = rand() % 200;   // generates random number between 0 and 200  0 <= n < 200
+        randomNumbers[i] = rand() % RANGE;   // generates random number between 0 and 200  0 <= n < 200
+        printf("%d\n", randomNumbers[i]);
     }
 
     linkedList *numbersList = makeList(randomNumbers[0]);
 
-    for (i = 1; i < 100; i++)                    // inserting tha array in the list
+    for (i = 1; i < ELEMENTS; i++)                    // inserting tha array in the list
     {
         numbersList = addToList(numbersList, randomNumbers[i]);
     }
 
     sortList(numbersList);
+    clearDubs(numbersList);
     printList(numbersList);
     freeList(numbersList);
 
